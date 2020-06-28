@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Fast Editor</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.15/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.15/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      .esri-editor .esri-item-list__scroller {
+        max-height: 350px;
+      }
+
+      #addServiceURLDiv{
+        z-index: 9;
+        /*color: #FFFFFF;*/
+        font-size: 50px;
+        position: absolute;
+        left: 66px;
+        top: -4px;
+    }
+    #serviceURL{
+      padding: 12px 7px 12px 20px;
+    }
+    .button-add-service-url {
+      background-color: #4c66af;
+      border: none;
+      color: white;
+      padding: 0px 12px;
+      /* text-align: center; */
+      /* text-decoration: none; */
+      display: inline-block;
+      font-size: 16px;
+      font-size: 37px;
+      margin-top: 19px;
+      position: absolute;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+      top: 23px;
+      left: 57px;
+    }
+
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    </style>
+
+    <script>
+      /**
+       * @author Gurminder Bharani  <bharanigurminder@gmail.com>
+      */
+      require([
+        "esri/Map",
+        "esri/WebMap",
+        "esri/views/MapView",
+        "esri/widgets/Editor",
+        "esri/layers/GroupLayer",
+        "esri/layers/MapImageLayer",
+        "esri/widgets/LayerList",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/BasemapGallery",
+        "esri/widgets/Expand",
+        "esri/config",
+        "dojo/on",
+        "dojo/dom",
+        "dojo/parser", 
+        "dijit/form/TextBox"
+      ], function(Map, WebMap, MapView, Editor,  GroupLayer, MapImageLayer, LayerList, FeatureLayer, BasemapGallery, Expand, esriConfig, on, dom) {
+        
+        var enableFastEditing= false
+
+        var addServiceButton = dom.byId("addServiceButton")
+
+        on(addServiceButton,"click",function(event){
+          if(dom.byId("serviceURL").value.includes("FeatureServer") && Number.isInteger(parseInt(dom.byId("serviceURL").value.split("/")[dom.byId("serviceURL").value.split("/").length-1]))){
+
+             var editFeatureLayer =  new FeatureLayer({
+                url: dom.byId("serviceURL").value
+              });
+             map.layers.add(editFeatureLayer)
+
+          }
+          else if(dom.byId("serviceURL").value.includes("FeatureServer") && Number.isInteger(parseInt(dom.byId("serviceURL").value.split("/")[dom.byId("serviceURL").value.split("/").length-1]))==false){
+              alert("Add the ESRI Feature Service URL with layer ID, example https://server/FeatureServer/0")
+          }
+          else{
+            alert("Added Service URL is not ESRI Feature Service")
+          }
+        });
+
+        var fastEditingStatusCheckBox = dom.byId("fastEditingStatus")
+
+        on(fastEditingStatusCheckBox,"click",function(event){
+          console.log(event)
+
+          if(dom.byId("fastEditingStatus").checked == true){
+              enableFastEditing = true
+          }
+          else{
+              enableFastEditing = false 
+          }
+
+        })
+
+
+        var editFeatureLayer =  new FeatureLayer({
+          url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Hazards_Uptown_Charlotte/FeatureServer/0"
+        });
+
+        var map = new Map({
+          basemap: "dark-gray",
+          layers:[editFeatureLayer]
+        });
+
+        let view = new MapView({
+          container: "viewDiv",
+          map: map
+        });
+
+        view.when(function() {
+          view.popup.autoOpenEnabled = false;
+
+          // Create the Editor
+          let editor = new Editor({
+            view: view
+          });
+
+          editor.on("vertex-add", function (evt) {
+            console.log(evt.vertices);
+          });
+
+          // Add widget to top-right of the view
+          view.ui.add(editor, "bottom-left");
+
+          var layerList = new LayerList({
+            view: view
+          });
+
+
+          var basemapGallery = new BasemapGallery({
+            view: view
+          });
+
+          var bgExpand = new Expand({
+                    view: view,
+                    content: basemapGallery
+                  });
+          
+          view.ui.add(bgExpand, {
+            position: "top-left"
+          });
+
+
+          var llExpand = new Expand({
+              view: view,
+              content: layerList
+             });
+
+          view.ui.add(llExpand, "top-left");
+          view.on("click",function(event){
+            if(enableFastEditing == true){
+              var opts = {
+                duration: 500
+              };
+              view.goTo({
+                  target: event.mapPoint
+                }, opts);
+            }
+          });
+
+
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv">
+      <div id="addServiceURLDiv">
+          <input type="text" id="serviceURL" name="serviceURL" placeholder="Paste Service URL here"> 
+          <button class="button-add-service-url" id="addServiceButton">+</button>
+          <label class="switch">
+            <input id="fastEditingStatus" type="checkbox">
+            <span class="slider"></span>
+          </label>    
+      </div>
+    </div> 
+
+    <div id="editorDiv"></div>
+  </body>
+</html>
