@@ -150,7 +150,7 @@
                 url: dom.byId("serviceURL").value
               });
              map.layers.add(editFeatureLayer)
-             view.goTo(editFeatureLayer.fullExtent);
+             // view.goTo(editFeatureLayer.fullExtent);
 
           }
           else if(dom.byId("serviceURL").value.includes("FeatureServer") && Number.isInteger(parseInt(dom.byId("serviceURL").value.split("/")[dom.byId("serviceURL").value.split("/").length-1]))==false){
