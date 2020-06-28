@@ -139,7 +139,7 @@
         "dijit/form/TextBox"
       ], function(Map, WebMap, MapView, Editor,  GroupLayer, MapImageLayer, LayerList, FeatureLayer, BasemapGallery, Expand, esriConfig, on, dom) {
         
-        var enableFastEditing= false
+        var enableFastEditing= true
 
         var addServiceButton = dom.byId("addServiceButton")
 
@@ -150,6 +150,7 @@
                 url: dom.byId("serviceURL").value
               });
              map.layers.add(editFeatureLayer)
+             view.goTo(editFeatureLayer.fullExtent);
 
           }
           else if(dom.byId("serviceURL").value.includes("FeatureServer") && Number.isInteger(parseInt(dom.byId("serviceURL").value.split("/")[dom.byId("serviceURL").value.split("/").length-1]))==false){
@@ -252,7 +253,7 @@
           <input type="text" id="serviceURL" name="serviceURL" placeholder="Paste Service URL here"> 
           <button class="button-add-service-url" id="addServiceButton">+</button>
           <label class="switch">
-            <input id="fastEditingStatus" type="checkbox">
+            <input id="fastEditingStatus" type="checkbox" checked="true">
             <span class="slider"></span>
           </label>    
       </div>
